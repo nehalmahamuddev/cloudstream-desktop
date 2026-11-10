@@ -33,6 +33,7 @@ src-tauri/libmpv/*.dll
 src-tauri/libmpv/*.lib
 *.dll
 *.lib
+!src-tauri/libmpv/mpv.lib
 *.exe
 *.jar
 src-tauri/*.jar

@@ -46,6 +46,8 @@ jobs:
           New-Item -ItemType Directory -Path "src-tauri/libmpv" -Force
           Expand-Archive -Path "src-tauri/libmpv-2_x64.zip" -DestinationPath "src-tauri/libmpv" -Force
           Copy-Item "src-tauri/libmpv/libmpv-2.dll" -Destination "src-tauri/libmpv-2.dll" -Force
+          Write-Host "LibMPV contents:"
+          Get-ChildItem -Path "src-tauri/libmpv"
 
       - name: Download Engine Runtime Assets
         env:
