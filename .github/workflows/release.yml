@@ -85,3 +85,16 @@ jobs:
             Download the installer setup (`CloudStream.Desktop_*_x64-setup.exe`) below and run it.
           releaseDraft: false
           prerelease: false
+
+      - name: Upload Permanent Latest Installer Asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name || inputs.tag_name }}"
+          $setupExe = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis" -Filter "*x64-setup.exe" | Select-Object -First 1
+          if ($setupExe) {
+            $permExe = Join-Path "src-tauri/target/release/bundle/nsis" "CloudStream-Desktop-Setup.exe"
+            Copy-Item $setupExe.FullName $permExe -Force
+            gh release upload $tag $permExe --clobber
+          }
