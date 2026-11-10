@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useSettings } from '../../../hooks/useSettings';
+import { useAppUpdater } from '../../../hooks/useAppUpdater';
 import {
   RefreshCw,
   Download,
@@ -12,18 +13,16 @@ export const UpdatesBackupTab: React.FC = () => {
   const { settings, updateSetting, exportSettingsJson, importSettingsJson, resetSettings } =
     useSettings();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
-  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [backupNotice, setBackupNotice] = useState<string | null>(null);
 
-  const handleCheckUpdates = () => {
-    setIsCheckingUpdates(true);
-    setUpdateStatus('Checking GitHub releases and repo manifests...');
-    setTimeout(() => {
-      setIsCheckingUpdates(false);
-      setUpdateStatus('You are running the latest version: v1.0.0 (Up to date)');
-    }, 1800);
-  };
+  const {
+    status: updaterStatus,
+    updateInfo,
+    downloadProgress,
+    error: updaterError,
+    checkForUpdates,
+    downloadAndInstall,
+  } = useAppUpdater();
 
   const handleExportBackup = () => {
     try {
@@ -109,19 +108,53 @@ export const UpdatesBackupTab: React.FC = () => {
       {/* Manual Update Trigger */}
       <div className="stremio-setting-row">
         <div className="stremio-setting-label-col">
-          <span className="stremio-setting-label">Manual Update Trigger</span>
+          <span className="stremio-setting-label">App & System Updates</span>
           <span className="stremio-setting-subtext">
-            {updateStatus || 'Click to verify GitHub releases and plugin manifests now'}
+            {updaterStatus === 'checking'
+              ? 'Checking GitHub releases and cryptographic signatures...'
+              : updaterStatus === 'available'
+              ? `New version available: v${updateInfo?.version} (Current: v${updateInfo?.currentVersion || '0.1.0'})`
+              : updaterStatus === 'downloading'
+              ? `Downloading update package: ${downloadProgress}%`
+              : updaterStatus === 'ready-to-restart'
+              ? 'Update downloaded and verified. Restart to apply update.'
+              : updaterStatus === 'error'
+              ? updaterError || 'Check failed. Please verify your internet connection.'
+              : updaterStatus === 'up-to-date'
+              ? 'You are running the latest version (Up to date)'
+              : 'Check GitHub releases for desktop application updates'}
           </span>
         </div>
-        <button
-          className="settings-btn-primary"
-          onClick={handleCheckUpdates}
-          disabled={isCheckingUpdates}
-        >
-          <RefreshCw size={14} className={isCheckingUpdates ? 'animate-spin' : ''} />
-          {isCheckingUpdates ? 'Checking...' : 'Check for Updates'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {updaterStatus === 'available' && (
+            <button
+              className="settings-btn-primary"
+              onClick={downloadAndInstall}
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #9d72ff)' }}
+            >
+              <Download size={14} /> Update Now
+            </button>
+          )}
+
+          {updaterStatus === 'ready-to-restart' && (
+            <button
+              className="settings-btn-primary"
+              onClick={downloadAndInstall}
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+            >
+              <RefreshCw size={14} /> Restart to Apply
+            </button>
+          )}
+
+          <button
+            className="settings-btn-primary"
+            onClick={checkForUpdates}
+            disabled={updaterStatus === 'checking' || updaterStatus === 'downloading'}
+          >
+            <RefreshCw size={14} className={updaterStatus === 'checking' ? 'animate-spin' : ''} />
+            {updaterStatus === 'checking' ? 'Checking...' : 'Check for Updates'}
+          </button>
+        </div>
       </div>
 
       {/* Auto-Update Extensions */}

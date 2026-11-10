@@ -26,7 +26,10 @@ fn main() {
     tauri_build::build();
 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
-    println!("cargo:rustc-link-arg=/LIBPATH:{}", lib_dir.display());
+    let target = env::var("TARGET").unwrap_or_default();
+    if target.contains("msvc") {
+        println!("cargo:rustc-link-arg=/LIBPATH:{}", lib_dir.display());
+    }
 
     // Copy libmpv-2.dll, engine.jar, and android-stubs.jar to target directory so dev runs find them
     if let Ok(out_dir) = env::var("OUT_DIR") {

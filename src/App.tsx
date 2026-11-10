@@ -41,6 +41,8 @@ const SettingsScreen = lazy(() => import('./screens/SettingsScreen').then((m) =>
 const ExpandedShelfModal = lazy(() => import('./components/ExpandedShelfModal').then((m) => ({ default: m.ExpandedShelfModal })));
 const DownloadsScreen = lazy(() => import('./screens/DownloadsScreen').then((m) => ({ default: m.DownloadsScreen })));
 import { track, trackScreen, trackPlayback, trackProvider } from './utils/openpulse';
+import { useAppUpdater } from './hooks/useAppUpdater';
+import { UpdateNotificationBanner } from './components/UpdateNotificationBanner';
 import {
   Search,
   ChevronDown,
@@ -185,6 +187,7 @@ const ScreenLoadingFallback: React.FC = () => (
 );
 
 export const App: React.FC = () => {
+  const updater = useAppUpdater();
   const [activeTab, setActiveTab] = useState('home');
   const [sourceFilterDropdownOpen, setSourceFilterDropdownOpen] = useState(false);
 
@@ -1070,6 +1073,16 @@ export const App: React.FC = () => {
 
   return (
     <>
+      {!updater.isBannerDismissed && (
+        <UpdateNotificationBanner
+          status={updater.status}
+          updateInfo={updater.updateInfo}
+          downloadProgress={updater.downloadProgress}
+          error={updater.error}
+          onUpdate={updater.downloadAndInstall}
+          onDismiss={updater.dismissBanner}
+        />
+      )}
       <div
         className="app-container"
         style={{ display: playerState ? 'none' : 'flex' }}

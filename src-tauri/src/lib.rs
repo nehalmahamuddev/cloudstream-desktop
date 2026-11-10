@@ -1953,6 +1953,7 @@ async fn get_storage_disk_info(
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // When a second instance is launched, focus the existing window instead of
             // spawning a duplicate process (which caused the "2 terminals" problem).

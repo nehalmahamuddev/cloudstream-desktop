@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name to release (e.g. v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+
+      - name: Install Frontend Dependencies
+        run: npm install
+
+      - name: Setup LibMPV Runtime
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "src-tauri/libmpv" -Force
+          Expand-Archive -Path "src-tauri/libmpv-2_x64.zip" -DestinationPath "src-tauri/libmpv" -Force
+          Copy-Item "src-tauri/libmpv/libmpv-2.dll" -Destination "src-tauri/libmpv-2.dll" -Force
+
+      - name: Download Engine Runtime Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          # Download bundled engine and JRE from repo build-assets release
+          gh release download build-assets --repo ${{ github.repository }} --pattern "engine.jar" --dir "src-tauri" --clobber
+          gh release download build-assets --repo ${{ github.repository }} --pattern "jre.zip" --dir "src-tauri" --clobber
+          New-Item -ItemType Directory -Path "src-tauri/jre" -Force
+          Expand-Archive -Path "src-tauri/jre.zip" -DestinationPath "src-tauri/jre" -Force
+          Remove-Item -Path "src-tauri/jre.zip" -Force
+
+      - name: Build Tauri Application & Create Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name || inputs.tag_name }}
+          releaseName: 'CloudStream Desktop ${{ github.ref_name || inputs.tag_name }}'
+          releaseBody: |
+            ## 🚀 CloudStream Desktop ${{ github.ref_name || inputs.tag_name }}
+            
+            ### ✨ Highlights
+            - High-performance Stremio-grade Cinema UI with sub-200ms cold launch
+            - Embedded SQLite persistence and watch history sync
+            - Native libmpv video player with D3D11 hardware acceleration
+            - Built-in M3U8 proxy bypassing 403 CDN blocks
+            - Real-time in-app auto-updater support (ED25519 signed)
+            
+            ### 📦 Installation
+            Download the installer setup (`CloudStream.Desktop_*_x64-setup.exe`) below and run it.
+          releaseDraft: false
+          prerelease: false

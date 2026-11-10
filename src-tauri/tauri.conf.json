@@ -30,6 +30,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": ["nsis"],
     "resources": [
       "libmpv-2.dll",
@@ -56,6 +57,14 @@
         "languages": ["English"],
         "displayLanguageSelector": false
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIyMkYzRDc1OTVBMDc5NDQKUldSRWVhQ1ZkVDB2c2tQSmU5WUp2UU10U095M3czQlhlaHJTdDhEV1B3dSs4WjlZNm1TcGN0SEEK",
+      "endpoints": [
+        "https://github.com/nehalmahamuddev/cloudstream-desktop/releases/latest/download/latest.json"
+      ]
     }
   }
 }

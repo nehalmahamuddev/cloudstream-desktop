@@ -36,6 +36,7 @@ src-tauri/libmpv/*.lib
 *.exe
 *.jar
 src-tauri/*.jar
+!src-tauri/android-stubs.jar
 src-tauri/stubs/classes/
 src-tauri/jre/
 *.png
@@ -44,3 +45,6 @@ src-tauri/jre/
 .env
 .env*.local
 *.pem
+tauri-key*
+*.key
+src-tauri/jre.zip
